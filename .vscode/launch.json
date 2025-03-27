@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "C#: HEIC2JPG",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}\\HEIC2JPG.csproj",
+            "launchConfigurationId": "TargetFramework=;HEIC2JPG"
+        }
+    ]
+}
