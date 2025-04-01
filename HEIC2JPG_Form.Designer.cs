@@ -38,6 +38,7 @@
             this.label_JpgCompressRate = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar_JpgCompressRate)).BeginInit();
             this.SuspendLayout();
             // 
@@ -155,12 +156,22 @@
             this.label2.TabIndex = 9;
             this.label2.Text = "JPG品質";
             // 
+            // progressBar
+            // 
+            this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar.Location = new System.Drawing.Point(0, 55);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(933, 5);
+            this.progressBar.TabIndex = 10;
+            this.progressBar.Visible = false;      // 
             // HEIC2JPG
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(934, 611);
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.progressBar);
+             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.label_JpgCompressRate);
             this.Controls.Add(this.trackBar_JpgCompressRate);
@@ -190,6 +201,7 @@
         private System.Windows.Forms.Label label_JpgCompressRate;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ProgressBar progressBar;
     }
 }
 

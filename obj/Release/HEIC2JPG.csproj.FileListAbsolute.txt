@@ -1,6 +1,5 @@
 C:\3D_prj\VS_2022_prj\HEIC2JPG\bin\Release\HEIC2JPG.exe.config
 C:\3D_prj\VS_2022_prj\HEIC2JPG\obj\Release\HEIC2JPG.csproj.AssemblyReference.cache
-C:\3D_prj\VS_2022_prj\HEIC2JPG\obj\Release\HEIC2JPG.csproj.SuggestedBindingRedirects.cache
 C:\3D_prj\VS_2022_prj\HEIC2JPG\obj\Release\HEIC2JPG.HEIC2JPG.resources
 C:\3D_prj\VS_2022_prj\HEIC2JPG\obj\Release\HEIC2JPG.Properties.Resources.resources
 C:\3D_prj\VS_2022_prj\HEIC2JPG\obj\Release\HEIC2JPG.csproj.GenerateResource.cache
