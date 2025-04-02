@@ -5,16 +5,28 @@ VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HEIC2JPG", "HEIC2JPG.csproj", "{89588716-EA99-4BFA-8EFF-8D44A32F1529}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "方案項目", "方案項目", "{334574A5-BD6B-4C24-B0A8-C90613037299}"
+	ProjectSection(SolutionItems) = preProject
+		packages\Magick.NET-Q8-x64.14.6.0\runtimes\win-x64\native\Magick.Native-Q8-x64.dll = packages\Magick.NET-Q8-x64.14.6.0\runtimes\win-x64\native\Magick.Native-Q8-x64.dll
+		packages\Magick.NET-Q8-x64.14.6.0\lib\netstandard20\Magick.NET-Q8-x64.dll = packages\Magick.NET-Q8-x64.14.6.0\lib\netstandard20\Magick.NET-Q8-x64.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{89588716-EA99-4BFA-8EFF-8D44A32F1529}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{89588716-EA99-4BFA-8EFF-8D44A32F1529}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89588716-EA99-4BFA-8EFF-8D44A32F1529}.Debug|x64.ActiveCfg = Debug|x64
+		{89588716-EA99-4BFA-8EFF-8D44A32F1529}.Debug|x64.Build.0 = Debug|x64
 		{89588716-EA99-4BFA-8EFF-8D44A32F1529}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89588716-EA99-4BFA-8EFF-8D44A32F1529}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89588716-EA99-4BFA-8EFF-8D44A32F1529}.Release|x64.ActiveCfg = Release|x64
+		{89588716-EA99-4BFA-8EFF-8D44A32F1529}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -9,17 +9,21 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using ImageMagick;
+using System.Diagnostics;
 
 namespace HEIC2JPG
 {
     public partial class HEIC2JPG : Form
     {
         private System.Windows.Forms.CheckBox checkBoxIncludeSubDirs;
+        private readonly ILogger _logger;
 
         public HEIC2JPG()
         {
             InitializeComponent();
             InitializeListView();
+            _logger = new FileLogger();
+            _logger.LogInfo("應用程式啟動");
         }
 
         // 初始化列表視圖
@@ -71,105 +75,135 @@ namespace HEIC2JPG
         // 將檔案加入到列表視圖
         private void AddFileToListView(string[] filePaths)
         {
-            // 先讓 listViewFile 暫停顯示，避免頻繁更新 UI
+            _logger.LogInfo($"開始添加檔案到列表，共 {filePaths.Length} 個檔案");
+            
             listViewFile.SuspendLayout();
             foreach (string filePath in filePaths)
             {
-                // 檢查是否已經存在於列表視圖中
                 if (!listViewFile.Items.Cast<ListViewItem>()
                     .Any(x => Path.Combine(x.SubItems[1].Text, x.Text) == filePath))
                 {
                     ListViewItem item = new ListViewItem(Path.GetFileName(filePath));
                     item.SubItems.Add(Path.GetDirectoryName(filePath));
                     listViewFile.Items.Add(item);
-                    Console.WriteLine(Path.GetFileName(filePath));
+                    _logger.LogDebug($"添加檔案: {filePath}");
                 }
                 else
                 {
-                    // 顯示對話框，提示檔案已存在
+                    _logger.LogInfo($"檔案已存在，跳過: {filePath}");
                     MessageBox.Show(filePath + " 已經存在");
                 }
             }
-            // 恢復 listViewFile 的顯示，並刷新 UI
             listViewFile.ResumeLayout();
             listViewFile.Refresh();
-            buttonConvert.Enabled = true; // 啟用轉換按鈕
+            buttonConvert.Enabled = true;
+            statusStrip1.Items[0].Text = $"總共 {listViewFile.Items.Count} 個檔案";
+            
+            _logger.LogInfo($"檔案列表更新完成，共 {listViewFile.Items.Count} 個檔案");
         }
 
         // 轉換按鈕點擊事件
         private async void buttonConvert_Click(object sender, EventArgs e)
         {
             // 顯示進度條
-            progressBar.Visible = true;
-            progressBar.Minimum = 0;
-            progressBar.Maximum = listViewFile.Items.Count;
-            progressBar.Value = 0;
+            ToolStripProgressBar toolStripProgressBar1 = (ToolStripProgressBar)statusStrip1.Items[2];
+            //statusStrip1.Items[2].
+            toolStripProgressBar1.Visible = true;
+            toolStripProgressBar1.Minimum = 0;
+            toolStripProgressBar1.Maximum = listViewFile.Items.Count;
+            toolStripProgressBar1.Step = listViewFile.Items.Count;
+            toolStripProgressBar1.Value = 0;
+
+            // 在启动异步任务前获取所有需要的信息
+            var itemsToProcess = new List<(string FilePath, string Directory)>();
+            foreach (ListViewItem item in listViewFile.Items)
+            {
+                itemsToProcess.Add((item.Text, item.SubItems[1].Text));
+            }
+            int processedCount = 0;
 
             // 使用非同步處理，避免 UI 卡頓
             await Task.Run(() =>
             {
-                int processedCount = 0;
-                foreach (ListViewItem item in listViewFile.Items)
+                foreach (var item in itemsToProcess)
                 {
-                    string heicFileName = Path.Combine(item.SubItems[1].Text, item.Text);
+                    string heicFileName = Path.Combine(item.Directory, item.FilePath);
                     Console.WriteLine(heicFileName);
                     string jpgFileName = Path.ChangeExtension(heicFileName, ".jpg");
 
                     // 檢查是否已經存在
                     if (File.Exists(jpgFileName))
                     {
-                        // 顯示對話框，詢問是否覆寫
-                        DialogResult result = MessageBox.Show(jpgFileName + " 已經存在，是否覆寫？", "確認覆寫", MessageBoxButtons.YesNo);
-                        if (result == DialogResult.Yes)
+                        // 使用Invoke确保在UI线程上执行
+                        this.Invoke((MethodInvoker)delegate
                         {
-                            ConvertHEICToJPG(heicFileName, jpgFileName);
-                        }
+                            // 顯示對話框，詢問是否覆寫
+                            DialogResult result = MessageBox.Show(jpgFileName + " 已經存在，是否覆寫？", "確認覆寫", MessageBoxButtons.YesNo);
+                            if (result == DialogResult.Yes)
+                            {
+                                ConvertHEICToJPG(heicFileName, jpgFileName);
+                            }
+                        });
                     }
                     else
                     {
-                        ConvertHEICToJPG(heicFileName, jpgFileName);
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            ConvertHEICToJPG(heicFileName, jpgFileName);
+                        });
                     }
                     processedCount++;
                     // 更新進度條
                     this.Invoke((MethodInvoker)delegate
                     {
-                        progressBar.Value = processedCount;
+                        toolStripProgressBar1.Value = processedCount;
                     });
                 }
             });
             // 隱藏進度條
-            progressBar.Visible = false;
+            //toolStripProgressBar1.Visible = false;
+            statusStrip1.Items[1].Text = $"轉換 {processedCount} 檔案 成功";
         }
 
         // 轉換 HEIC 到 JPG 的方法
         private void ConvertHEICToJPG(string inputFileName, string outputFileName)
         {
+            _logger.LogInfo($"開始轉換檔案: {inputFileName}");
+            
             try
             {
-                // 使用 ImageMagick 進行 HEIC 到 JPG 的轉換
-                using (var image = new MagickImage(inputFileName))
+                this.Invoke((MethodInvoker)delegate
                 {
-                    image.Format = MagickFormat.Jpg; // 設定輸出格式為 JPG
-                    image.Quality = (uint)trackBar_JpgCompressRate.Value; // 設定輸出品質
-                    image.Write(outputFileName); // 寫入輸出檔案
-                }
-            }
-            catch (MagickException ex)
-            {
-                // 捕捉 ImageMagick 相關的異常
-                MessageBox.Show($"轉換 {inputFileName} 失敗：\n{ex.Message}", "轉換錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    using (var image = new MagickImage(inputFileName))
+                    using (var outputStream = new FileStream(outputFileName, FileMode.Create))
+                    {
+                        image.Format = MagickFormat.Jpg;
+                        image.Quality = (uint)trackBar_JpgCompressRate.Value;
+                        image.Write(outputStream);
+                        
+                        string displayFileName = inputFileName.Length > 50
+                            ? inputFileName.Substring(0, 23) + "...." + inputFileName.Substring(inputFileName.Length - 23)
+                            : inputFileName;
+
+                        statusStrip1.Items[1].Text = $"轉換 {displayFileName} 成功";
+                        statusStrip1.Items[1].ToolTipText = inputFileName;
+                        
+                        _logger.LogInfo($"檔案轉換成功: {inputFileName} -> {outputFileName}");
+                    }
+                });
             }
             catch (Exception ex)
             {
-                // 捕捉其他類型的異常
-                MessageBox.Show($"轉換 {inputFileName} 失敗：\n{ex.Message}", "轉換錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger.LogError($"檔案轉換失敗: {inputFileName}", ex);
+                MessageBox.Show($"轉換 {inputFileName} 失敗：\n{ex.Message}", "轉換錯誤", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         // 表單大小調整事件
         private void HEIC2JPG_Resize(object sender, EventArgs e)
         {
-            this.listViewFile.Size = new Size(this.Width - 20, this.Height - 80);
+            this.listViewFile.Size = new Size(this.Width - 20, this.Height - 80 - 24);
         }
 
         // 列表視圖雙擊事件
@@ -185,16 +219,17 @@ namespace HEIC2JPG
         // 顯示圖片的方法
         private void ShowImage(string filePath)
         {
-            // 確認檔案存在
+            _logger.LogInfo($"嘗試顯示圖片: {filePath}");
+            
             if (!File.Exists(filePath))
             {
+                _logger.LogError($"檔案不存在: {filePath}", new FileNotFoundException());
                 MessageBox.Show("檔案不存在");
                 return;
             }
 
             try
             {
-                // 創建一個新的表單來顯示圖像，並且把主視窗的控制權交給這個新視窗
                 Form imageForm = new Form();
                 using (var imageTmp = new MagickImage(filePath))
                 {
@@ -209,17 +244,14 @@ namespace HEIC2JPG
                     imageForm.Text = Path.GetFileName(filePath);
                     imageForm.Size = new Size(800, 600);
                     imageForm.Show();
+                    _logger.LogInfo($"圖片顯示成功: {filePath}");
                 }
-            }
-            catch (MagickException ex)
-            {
-                // 捕捉 ImageMagick 相關的異常
-                MessageBox.Show($"載入圖片 {filePath} 失敗：\n{ex.Message}", "圖片載入錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                // 捕捉其他類型的異常
-                MessageBox.Show($"載入圖片 {filePath} 失敗：\n{ex.Message}", "圖片載入錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger.LogError($"圖片顯示失敗: {filePath}", ex);
+                MessageBox.Show($"載入圖片 {filePath} 失敗：\n{ex.Message}", 
+                    "圖片載入錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -234,6 +266,89 @@ namespace HEIC2JPG
         private void trackBar_JpgCompressRate_ValueChanged(object sender, EventArgs e)
         {
             label_JpgCompressRate.Text = trackBar_JpgCompressRate.Value.ToString();
+        }
+
+        private void buttonViewLog_ButtonClick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (File.Exists("conversion.log"))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "conversion.log",
+                        UseShellExecute = true
+                    });
+                }
+                else
+                {
+                    MessageBox.Show("日誌檔案不存在", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("開啟日誌檔案失敗", ex);
+                MessageBox.Show($"開啟日誌檔案失敗：\n{ex.Message}", "錯誤", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            _logger.LogInfo("應用程式關閉");
+        }
+
+    }
+
+    // 建議添加結構化日誌記錄
+    public interface ILogger
+    {
+        void LogInfo(string message);
+        void LogError(string message, Exception ex);
+        void LogDebug(string message);
+    }
+
+    public class FileLogger : ILogger
+    {
+        private readonly string _logFilePath;
+        private readonly object _lockObj = new object();
+
+        public FileLogger(string logFilePath = "conversion.log")
+        {
+            _logFilePath = logFilePath;
+        }
+
+        public void LogInfo(string message)
+        {
+            WriteLog("INFO", message);
+        }
+
+        public void LogError(string message, Exception ex)
+        {
+            WriteLog("ERROR", $"{message}\nException: {ex.Message}\nStackTrace: {ex.StackTrace}");
+        }
+
+        public void LogDebug(string message)
+        {
+            WriteLog("DEBUG", message);
+        }
+
+        private void WriteLog(string level, string message)
+        {
+            try
+            {
+                string logMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{level}] {message}";
+                lock (_lockObj)
+                {
+                    File.AppendAllText(_logFilePath, logMessage + Environment.NewLine);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 如果寫入日誌失敗，至少要在控制台顯示
+                Console.WriteLine($"寫入日誌失敗: {ex.Message}");
+            }
         }
     }
 }
