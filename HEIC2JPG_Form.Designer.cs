@@ -225,8 +225,9 @@
             this.Controls.Add(this.button_OpenDir);
             this.Controls.Add(this.buttonOpenFiles);
             this.Controls.Add(this.checkBoxIncludeSubDirs);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "HEIC2JPG";
-            this.Text = "HEIC2JPG Ver1.1";
+            this.Text = "HEIC2JPG Ver1.2";
             this.Resize += new System.EventHandler(this.HEIC2JPG_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.trackBar_JpgCompressRate)).EndInit();
             this.statusStrip1.ResumeLayout(false);
